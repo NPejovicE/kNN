@@ -1,0 +1,93 @@
+---
+title: "Logistička regresija - šta, kako i kad?"
+author: "N.Pejovic"
+date: "2024-02-27"
+output: pdf_document
+
+---
+
+
+### Otkud naziv 'logistička'?
+
+Priču započinjemo sredinom 19. vijeka kada belgijski naučnik Pjer Fransoa Verhulst, baveći se istraživanjem rasta ljudske populacije, dolazi do logističke funkcije, kako je sam nazvao. Funkcija, kao i svaka druga matematička funkcija uzima brojeve, nešto radi sa njima i izbaca neki rezultat. Ono što logistička funkcija radi sa brojevima prikazano je sledećom formulom:
+
+$$
+f(x) = \frac{1}{1+e^{-x}}
+$$
+
+![Pjer Fransoa Verhulst](C:/Users/Nikola/Desktop/pFv.jpg)
+
+Precizno, ovo je standardna logistička funkcija, ali je i dalje logistička funkcija. "Uzme' 1 i "izbaci" 0.7310, uzme "-1" i 'izbaci' 0.2689. Koje god vrijednosti da uzme od – besonačno, do + beskonačno "izbaciće" rezultat od 0 do 1. Tako za vrijednost x-a od -10 do 10 logistička funkcija ima sledeći izgled:
+
+```{r logisticka_funkcija, echo = FALSE, message = FALSE}
+library(dplyr)
+library(ggplot2)
+x <- seq(-10,10)
+y <- 1/(1+exp(-x))
+
+tibble(x,y) -> df
+
+library(dplyr)
+library(ggplot2)
+
+ggplot(df, aes(x,y)) + geom_line() +
+  ylab("f(x)") +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_minimal() +
+  ggtitle("Logistička funkcija")
+```
+Logistička funkcija pripada sigmoidnim funkcijama, a to su funkcije koje imaju izgled latiničnog slova S, što se i može vidjeti sa grafika. 
+
+### Od logističke funkcije do logističke regresije
+
+Logistička regresija je blisko povezana sa logističkom funkcijom. Rađe nego davanje definicije na samom početku, prvo ćemo se suočiti sa problemom koji želimo da riješimo i vidjeti kako nam logistička regresija može pomoći u tome. Recimo da jedna telekomunikaciona kompanija želi da predvidi odliv svojih korisnika i sakupila je određene podatke. Podaci o klijentima dostupni su na sledećem __[linku](https://www.kaggle.com/datasets/blastchar/telco-customer-churn).__
+
+Dataset ćemo nazvati 'telco', i pogledati strukturu:
+
+koristimo sledece pakete
+library(dplyr)
+library(readr)
+
+```{r telco, message = FALSE}
+library(readr)
+read_csv("telco.csv") -> telco
+glimpse(telco)
+```
+
+Naš dataset sadrži podatke o ```7043``` klijenta koji su raspoređeni u `21` kolonu. Kolona od interesa nam je `'Churn'` kolona koja nam govorio da li je klijent prestao da koristio usluge kompanije ili nije. Kako želimo da prikažemo logiku i mehanizam logističke funkcije, prije nego da se bavimo specifikacijom modela, modeliraćemo kako varijabla mjesečne pretplate `'MonthlyCharges` utiče na do da li će se klijent odliti. U našem modelu imamo zavisnu varijablu `Churn` i jednu nezavisnu varijablu `'MonthlyCharges'`. Modeliranje vjerovatnoće binarne zavisne varijable, kao što je varijabla `'Churn'` sa ishodima `'Yes'` i `'No'` je upravo situacija u kojoj koristimo logističku regresiju. Klijenta koji se odlio ćemo označiti sa 1, a onog koji nije sa 0.
+
+Prvo ćemo direktno sprovesti logisticku regresiju, vidjeti rezultate, a potom postepeno objasniti svaki njen dio.
+
+```{r logistic_regression, message = FALSE}
+telco %>% mutate(Churn = ifelse(Churn == "Yes",1,0)) -> telco
+#Kreiramo model
+glm(Churn ~ MonthlyCharges, family = binomial, data = telco) -> model
+#predvidjene vjerovatnoce
+fitted(model) -> fitted
+#graficki prikaz
+ggplot(telco, aes(x = MonthlyCharges, y = fitted(model))) +
+  geom_line() +
+  labs(title = "Logistic Regression Fitted Values",
+       x = "MontlyCharges",
+       y = "Predicted Probability") +
+  theme_minimal()
+```
+
+Razlog zasto vjerovatnoce nemaju oblik slova 'S' je taj sto nemamo dovoljno varijabiliteta u 'MonthlyCharges', pa navedeni grafik mozemo posmatrati samo kao dio logisticke funkcije za vrijednosti 'MonthlyCharges' u uzorku. Sa vecim varijabilitetom, grafik bi izgledao ovako, pri cemu ja plavom bojom oznacen dio koji se odnosi na nas uzorak. 
+
+```{r regression_full, message = FALSE, warning = FALSE}
+tibble(MonthlyCharges = seq(from = -500, to = 500, length.out = 7043)) -> test
+predict(model, test, type = "response") -> prob
+ggplot(tibble(test, prob), aes(MonthlyCharges, prob)) + 
+  geom_line() +
+  geom_line(data = telco, aes(x = MonthlyCharges, y = fitted(model)), color = "blue", size = 2) +
+  theme_minimal()
+```
+
+
+
+
+
+
+
+

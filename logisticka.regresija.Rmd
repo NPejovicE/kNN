@@ -85,7 +85,26 @@ ggplot(tibble(test, prob), aes(MonthlyCharges, prob)) +
 ```
 
 
+### Generalised Linear Models
 
+Glm funkcija kojoj smo sproveli linearnu regresiju na našem dataset-u skraćenica je za Generalised Linear Models. Pretpostavke linearne regresije su linearna zavisnost izmedju zavisne i nezavisne varijable i normalan raspored nezavisne varijable. GLM omogućavaju modeliranje uz narušavanje ovih pretpostavki. Specifično, kod logističke regresije, kao tipa GLM-a, response varijabla nema normalan raspored, vec binominalan (može imati samo vrijednosti 0 i 1). Svaki GLM model sastoji se od tri komponente:
+
+1.  Slučajne komponente koja se odnosi na raspored zavisne varijable;
+2.  Sistemske komponente koja predstavlja linearnu kombinaciju nezavisnih varijabli;
+3.  Link funkcije koja predstavlja vezu između zavisne varijable i linearne kombinacije nezavisnih varijabli.
+
+Sigmoidna linija u našem primjeru predstavlja modeliranu vjerovatnoću odliva klijenata. Ako se prisjetimo logističke funkcije sa početka, možemo je predstaviti sledećom jednačinom:
+
+$$
+\hat{p} = \frac{1}{1+e^{-(b_0+b_1*x)}}
+$$
+
+Izraz $$b_0+b_1*x$$ predstavlja linearnu kombinaciju nezavisne varijable, tj. sistemsku komponentu. Prikazana logistička funkcija je veza nezavisne i zavisne varijable (vjerovatnoće), tj. link funkcija. Kao što vidimo, logistička regresija je vrsta generalised linear modela. 
+
+
+### Maximum Likelihood
+
+Pitanje koje se postavlja je na koji način odrediti koeficijente $b_0$ i $b_1$ na optimalan način, tako da za svaku vrijednost x-a (`MonthlyCharges`) dobijemo vjerovatnoću odliva klijenta?
 
 
 

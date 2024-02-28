@@ -3,8 +3,8 @@ title: "Logistička regresija - šta, kako i kad?"
 author: "N.Pejovic"
 date: "2024-02-27"
 output:
-  word_document: default
   pdf_document: default
+  word_document: default
 ---
 
 
@@ -16,6 +16,7 @@ $$
 f(x) = \frac{1}{1+e^{-x}}
 $$
 
+![Pjer Fransoa Verhulst](C:/Users/Nikola/Desktop/pFv.jpg)
 
 Precizno, ovo je standardna logistička funkcija, ali je i dalje logistička funkcija. "Uzme' 1 i "izbaci" 0.7310, uzme "-1" i 'izbaci' 0.2689. Koje god vrijednosti da uzme od – besonačno, do + beskonačno "izbaciće" rezultat od 0 do 1. Tako za vrijednost x-a od -10 do 10 logistička funkcija ima sledeći izgled:
 
@@ -190,12 +191,40 @@ Ako se vratimo u summary(model), vidimo da smo dobili iste koeficijente.
 ### Log-odds
 
 
-Logističkom funkcijom, modelirali smo vjerovatnoću odliva klijenta na osnovu iznosa varijable `MonthlyCharges`. Odnos između vjerovatnoće i nezavisne varijable je nelinearan, ali postoji pokazatelj koji je linearna kombinacija nezavisnih varijabli. Da vidimo i kojem se pokazatelju radi:
+Logističkom funkcijom, modelirali smo vjerovatnoću odliva klijenta na osnovu iznosa varijable `MonthlyCharges`. Odnos između vjerovatnoće i nezavisne varijable je nelinearan, ali postoji pokazatelj koji je linearna kombinacija nezavisnih varijabli. Da vidimo i kojem se pokazatelju rad, krenuvši of logističke funkcije:
+
+
+\[
+\begin{aligned}
+y_{\text{pred}} &= \frac{1}{1+e^{-(b_0+b_1x)}} \\
+y_{\text{pred}}(1+e^{-(b_0+b_1x)}) &=  1 \\
+1+e^{-(b_0+b_1x)} &=\frac{1}{y_{\text{pred}}} \\
+e^{-(b_0+b_1x)} &= \frac{1}{y_{\text{pred}}}-1 \\
+e^{-(b_0+b_1x)} &= \frac{1-y_{\text{pred}}}{y_{\text{pred}}} \\
+{-(b_0+b_1x)} &= \log\left(\frac{1-y_{\text{pred}}}{y_{\text{pred}}}\right) \\
+{b_0+b_1x} &= \log\left(\frac{y_{\text{pred}}}{1-y_{\text{pred}}}\right)
+\end{aligned}
+\]
 
 
 
+Izraz $log(\frac{y_{pred}}{1-y_{pred}}$ zove se log-odds i predstavlja log vrijednost odnosa vjerovatnoće da će se klijent odliti i vjerovatnoće da neće. Prilikom sagledavanja predviđenih vrijednosti logističkom regresijom, po default-u prikazuje se log-odds:
 
-Logistička regresija
+```{r log_odds, message = FALSE}
+library(broom)
+
+#Manuelno racunanje log-odds
+
+intercept <- coef(model)[1]
+slope <- coef(model)[2]
+y_pred <- 1/(1+exp(-(intercept+slope*telco$MonthlyCharges)))
+log(y_pred/(1-y_pred)) -> logodds
+
+#Uporedni prikaz
+head(cbind(model = augment(model)$.fitted, logodds),5)
+```
+
+
 
 
 

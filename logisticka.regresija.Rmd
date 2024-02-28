@@ -15,7 +15,6 @@ $$
 f(x) = \frac{1}{1+e^{-x}}
 $$
 
-![Pjer Fransoa Verhulst](C:/Users/Nikola/Desktop/pFv.jpg)
 
 Precizno, ovo je standardna logistička funkcija, ali je i dalje logistička funkcija. "Uzme' 1 i "izbaci" 0.7310, uzme "-1" i 'izbaci' 0.2689. Koje god vrijednosti da uzme od – besonačno, do + beskonačno "izbaciće" rezultat od 0 do 1. Tako za vrijednost x-a od -10 do 10 logistička funkcija ima sledeći izgled:
 
@@ -105,6 +104,71 @@ Izraz $$b_0+b_1*x$$ predstavlja linearnu kombinaciju nezavisne varijable, tj. si
 ### Maximum Likelihood
 
 Pitanje koje se postavlja je na koji način odrediti koeficijente $b_0$ i $b_1$ na optimalan način, tako da za svaku vrijednost x-a (`MonthlyCharges`) dobijemo vjerovatnoću odliva klijenta?
+
+Razmotrimo sledeći izraz:
+
+y_actual * y_pred + (1-y_actual)*(1-y_pred)
+
+gdje `y_actual` predstavlja stvarnu vrijednost odliva klijenta (1 ili 0), a `y_pred` predviđenu vrijednost (vjerovatnoca od 0 do 1). U situaciji kada se klijent odlio, `y_actual` = 1, pa izraz ima vrijednost:
+
+1 * y_pred + 0*(1-y_pred) = y_pred
+
+Maksimum ovog izraza je 1, ako smo predvidjeli vjerovatnocu odliva onog klijenta koji se odlio od 100%, tj. kada smo tacno predvidjeli.
+
+U situaciji kada se klijent nije odlio, y_actual = 0, pa izraz ima vrijednost:
+
+0 * y_pred + 1*(1-y_pred) = 1-y_pred
+
+Maksimum ovog izraza je 1, ako smo predvidjeli vjerovatnocu odliva onog klijenta koji se odlio od 0%, tj. kada smo tacno predvidjeli.
+
+
+Na osnovu navedenog, vidimo da nam je cilje da maksimizirmo izraz sa početka, pa želimo da nađemo one vrijednosti b_0 i b_1 koje maksimiziraju taj izraz. Uzimimo dvije proizvoljne vrijednosti b_0 i b_1:
+
+
+b0 <- -1
+b1 <- 0.1
+
+Za ove vrijednosti inicijalnih koeficijenata, za svaku vrijednost x-a (`MonthlyChargres`) dobijamo vjerovatnoću odliva klijenta, unoseći podatke u formulu.
+
+
+b0 <- -1
+b1 <- 0.1
+
+y_pred <- 1/(1+exp(-(b0+b1*telco$MonthlyCharges)))
+as.data.frame(cbind(y_actual = telco$Churn, y_pred)) -> data
+data %>% mutate(izraz = y_actual*y_pred + (1-y_actual)*(1-y_pred)) %>% summarise(sum(izraz))
+
+Ovaj izraz se zove likelihood. Zbog komputaciono praktičnih razloga, izraz koji maksimiziramo je log likelihood. 
+
+log(y_actual)*y_pred + log(1-y_actual)*(1-y_pred) – log likelihood
+
+data %>% mutate(izraz = y_actual*log(y_pred)+ (1-y_actual)*log(1-y_pred)) %>% summarise(sum(izraz))
+
+
+
+calc_neg_log_likelihood <- function(coeffs) {
+  intercept <- coeffs[1]
+  slope <- coeffs[2]
+  y_pred <- 1/(1+exp(-(intercept+slope*telco$MonthlyCharges)))
+  log_likelihoods <- log(y_pred)*telco$Churn + log(1-y_pred)*(1-telco$Churn)
+    -sum(log_likelihoods)
+}
+
+calc_neg_log_likelihood(c(-1,0.1))
+
+Naci maksimum funkcije isto je kao naci minimum - funkcije. 
+
+
+optim(
+  par = c(intercept = -1,slope = 0.1),
+  fn = calc_neg_log_likelihood
+)
+
+
+Ako se vratimo u summary(model), vidimo da smo dobili iste koeficijente. To je maksimul likelihood metod za dobijanje koeficijenata
+logističke regresije. 
+
+
 
 
 
